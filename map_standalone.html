@@ -981,10 +981,32 @@ body { font-family:'Heebo',Arial,'Arial Hebrew',sans-serif; background:var(--bg)
 
 /* Mobile */
 @media(max-width:768px){
-  .sidebar { position:fixed; right:0; top:56px; bottom:0; z-index:800; transform:translateX(0); transition:transform .25s; }
-  .sidebar.collapsed { transform:translateX(100%); width:300px; }
+  /* Sidebar — slides in from right, starts collapsed */
+  .sidebar { position:fixed; right:0; top:56px; bottom:0; z-index:800; transform:translateX(100%); width:88vw; max-width:320px; transition:transform .25s; }
+  .sidebar.open { transform:translateX(0); }
+
+  /* Modal — full width bottom sheet */
+  .pole-modal { max-width:100%; border-radius:16px 16px 0 0; }
+
+  /* Tabs — smaller, emoji only shows on very small screens */
+  .modal-tab { font-size:11px; padding:10px 8px; gap:3px; flex:1; justify-content:center; }
+  .modal-tab .tab-text { display:none; }
+
+  /* Header — icon-only buttons */
+  .btn .btn-text { display:none; }
+  .btn { padding:7px 10px; font-size:16px; }
+
+  /* Legend — hidden on mobile (use layer switcher instead) */
+  .legend-box { display:none; }
+
+  /* Filter bar chips */
   .filter-bar { display:none; }
-  .pole-modal { max-width:100%; }
+
+  /* Filter toggles — bigger tap targets */
+  .filter-toggle { padding:8px 14px; font-size:12px; }
+
+  /* Filter count bar */
+  .filter-count-bar { font-size:12px; }
 }
 </style>
 </head>
@@ -997,9 +1019,9 @@ body { font-family:'Heebo',Arial,'Arial Hebrew',sans-serif; background:var(--bg)
     <div class="header-sub">YEHUD-MONOSSON · <span id="hCount">–</span> עמודים</div>
   </div>
   <div class="header-actions">
-    <button class="btn btn-ghost" id="btnDraw" onclick="toggleDrawMode()">✏️ צייר מרכזיה</button>
-    <button class="btn btn-ghost" id="btnToggleSidebar" onclick="toggleSidebar()">☰ פאנל</button>
-    <button class="btn btn-primary" onclick="exportAssignments()">⬇ ייצוא</button>
+    <button class="btn btn-ghost" id="btnDraw" onclick="toggleDrawMode()">✏️ <span class="btn-text">צייר מרכזיה</span></button>
+    <button class="btn btn-ghost" id="btnToggleSidebar" onclick="toggleSidebar()">☰ <span class="btn-text">פאנל</span></button>
+    <button class="btn btn-primary" onclick="exportAssignments()">⬇ <span class="btn-text">ייצוא</span></button>
   </div>
 </div>
 
@@ -1132,10 +1154,10 @@ body { font-family:'Heebo',Arial,'Arial Hebrew',sans-serif; background:var(--bg)
   <div class="pole-modal">
     <div class="modal-drag"></div>
     <div class="modal-tabs">
-      <div class="modal-tab active" onclick="switchTab('tab-id')" id="t-id">🪪 תעודת זהות</div>
-      <div class="modal-tab" onclick="switchTab('tab-nav')" id="t-nav">🧭 ניווט</div>
-      <div class="modal-tab" onclick="switchTab('tab-fault')" id="t-fault">⚠️ דיווח</div>
-      <div class="modal-tab" onclick="switchTab('tab-history')" id="t-history">📋 היסטוריה</div>
+      <div class="modal-tab active" onclick="switchTab('tab-id')" id="t-id">🪪 <span class="tab-text">תעודת זהות</span></div>
+      <div class="modal-tab" onclick="switchTab('tab-nav')" id="t-nav">🧭 <span class="tab-text">ניווט</span></div>
+      <div class="modal-tab" onclick="switchTab('tab-fault')" id="t-fault">⚠️ <span class="tab-text">דיווח</span></div>
+      <div class="modal-tab" onclick="switchTab('tab-history')" id="t-history">📋 <span class="tab-text">היסטוריה</span></div>
     </div>
     <!-- ID CARD -->
     <div class="tab-content active" id="tab-id">
@@ -1823,7 +1845,12 @@ function exportAssignments() {
 
 // ─── UI ───────────────────────────────────────────────────────────────────────
 function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('collapsed');
+  const sb = document.getElementById('sidebar');
+  if (window.innerWidth <= 768) {
+    sb.classList.toggle('open');
+  } else {
+    sb.classList.toggle('collapsed');
+  }
 }
 
 // ─── FILTERS ─────────────────────────────────────────────────────────────────
