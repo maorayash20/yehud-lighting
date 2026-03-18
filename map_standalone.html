@@ -703,6 +703,8 @@ body { font-family:'Heebo',Arial,'Arial Hebrew',sans-serif; background:var(--bg)
 .btn-ghost:hover { background:var(--border); }
 .btn-danger { background:rgba(239,68,68,.1); color:var(--danger); border:1px solid rgba(239,68,68,.3); }
 .btn-danger:hover { background:rgba(239,68,68,.2); }
+.btn-share { background:rgba(16,185,129,.12); color:#34d399; border:1px solid rgba(16,185,129,.3); }
+.btn-share:hover { background:rgba(16,185,129,.22); }
 .btn-active { background:rgba(59,130,246,.2); color:#60a5fa; border:1px solid rgba(59,130,246,.4); }
 
 /* LAYOUT */
@@ -1185,6 +1187,10 @@ body { font-family:'Heebo',Arial,'Arial Hebrew',sans-serif; background:var(--bg)
       <div class="assign-section">
         <div class="assign-label">שיוך מרכזיה</div>
         <select class="assign-select" id="mAssignSelect" onchange="assignPoleToPanel(this.value)"></select>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn btn-share" style="flex:1;justify-content:center;font-size:13px" onclick="shareLocation()">📍 שתף מיקום</button>
+        <a class="btn btn-ghost" id="wazeQuickBtn" href="#" target="_blank" style="flex:1;justify-content:center;font-size:13px;text-decoration:none">🚗 Waze</a>
       </div>
     </div>
     <!-- NAVIGATION -->
@@ -1686,7 +1692,9 @@ function showPoleDetail(pole) {
     panels.map(p => `<option value="${p.id}" ${cur === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
 
   // Nav links
-  document.getElementById('wazeBtn').href = `https://waze.com/ul?ll=${pole.lat},${pole.lon}&navigate=yes`;
+  const wazeUrl = `https://waze.com/ul?ll=${pole.lat},${pole.lon}&navigate=yes`;
+  document.getElementById('wazeBtn').href = wazeUrl;
+  document.getElementById('wazeQuickBtn').href = wazeUrl;
   document.getElementById('googleBtn').href = `https://www.google.com/maps/dir/?api=1&destination=${pole.lat},${pole.lon}`;
   document.getElementById('mCoords').textContent = `${pole.lat}, ${pole.lon}`;
 
@@ -1870,6 +1878,23 @@ function toggleSidebar() {
     bd.style.display = isOpen ? 'block' : 'none';
   } else {
     sb.classList.toggle('collapsed');
+  }
+}
+
+// ─── SHARE LOCATION ──────────────────────────────────────────────────────────
+function shareLocation() {
+  const pole = POLES.find(p => p.id === selectedPoleId);
+  if (!pole) return;
+  const name = pole.street ? `${pole.street} #${pole.id}` : `עמוד תאורה #${pole.id}`;
+  const wazeUrl = `https://waze.com/ul?ll=${pole.lat},${pole.lon}&navigate=yes`;
+  const text = `${name}\n📍 ${pole.lat.toFixed(6)}, ${pole.lon.toFixed(6)}`;
+
+  if (navigator.share) {
+    navigator.share({ title: name, text, url: wazeUrl }).catch(() => {});
+  } else {
+    // Fallback: open WhatsApp with the message
+    const msg = encodeURIComponent(`${text}\n🚗 Waze: ${wazeUrl}`);
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
   }
 }
 
