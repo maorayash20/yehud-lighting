@@ -981,32 +981,40 @@ body { font-family:'Heebo',Arial,'Arial Hebrew',sans-serif; background:var(--bg)
 
 /* Mobile */
 @media(max-width:768px){
-  /* Sidebar — slides in from right, starts collapsed */
-  .sidebar { position:fixed; right:0; top:56px; bottom:0; z-index:800; transform:translateX(100%); width:88vw; max-width:320px; transition:transform .25s; }
-  .sidebar.open { transform:translateX(0); }
+  /* Sidebar — hidden by default, slides in from right */
+  .sidebar {
+    position:fixed !important; right:0; top:56px; bottom:0;
+    z-index:3500 !important; width:90vw !important; max-width:340px !important;
+    transform:translateX(105%) !important; transition:transform .3s ease !important;
+    box-shadow:-8px 0 32px rgba(0,0,0,.6);
+    overflow-y:auto !important;
+  }
+  .sidebar.open { transform:translateX(0) !important; }
 
-  /* Modal — full width bottom sheet */
-  .pole-modal { max-width:100%; border-radius:16px 16px 0 0; }
+  /* Backdrop when sidebar open */
+  .sidebar-backdrop { display:block !important; }
 
-  /* Tabs — smaller, emoji only shows on very small screens */
-  .modal-tab { font-size:11px; padding:10px 8px; gap:3px; flex:1; justify-content:center; }
-  .modal-tab .tab-text { display:none; }
+  /* Modal — full width */
+  .pole-modal { max-width:100% !important; border-radius:16px 16px 0 0; }
 
-  /* Header — icon-only buttons */
-  .btn .btn-text { display:none; }
-  .btn { padding:7px 10px; font-size:16px; }
+  /* Tabs — emoji only */
+  .modal-tab { font-size:12px; padding:12px 6px; gap:2px; flex:1; justify-content:center; }
+  .tab-text { display:none; }
 
-  /* Legend — hidden on mobile (use layer switcher instead) */
-  .legend-box { display:none; }
+  /* Header — icon only */
+  .btn-text { display:none !important; }
+  .btn { padding:8px 11px; font-size:17px; }
 
-  /* Filter bar chips */
-  .filter-bar { display:none; }
+  /* Legend — hidden */
+  .legend-box { display:none !important; }
+  .filter-bar { display:none !important; }
 
   /* Filter toggles — bigger tap targets */
-  .filter-toggle { padding:8px 14px; font-size:12px; }
+  .filter-toggle { padding:10px 16px; font-size:13px; }
 
-  /* Filter count bar */
-  .filter-count-bar { font-size:12px; }
+  /* Map fills remaining height correctly on mobile */
+  body { height:100dvh; }
+  #map { min-height:0 !important; }
 }
 </style>
 </head>
@@ -1048,6 +1056,9 @@ body { font-family:'Heebo',Arial,'Arial Hebrew',sans-serif; background:var(--bg)
       </div>
     </div>
   </div>
+
+  <!-- Sidebar backdrop (mobile only) -->
+  <div id="sidebarBackdrop" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:3499;backdrop-filter:blur(2px)"></div>
 
   <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
@@ -1288,15 +1299,22 @@ document.addEventListener('DOMContentLoaded', () => {
   map = L.map('map', { zoomControl: false }).setView([32.032, 34.884], 15);
   
   const baseLayers = {
+    '🗺️ OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:19}),
     '🏙️ Google רחובות': L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {attribution:'© Google', maxZoom:21}),
     '🔀 Google היברידי': L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {attribution:'© Google', maxZoom:21}),
     '🛰️ Google לוויין': L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {attribution:'© Google', maxZoom:21}),
     '🛰️ לוויין Esri': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {attribution:'© Esri', maxZoom:21}),
-    '🗺️ OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:19}),
     '🗺️ Esri טופוגרפי': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {attribution:'© Esri', maxZoom:21}),
     '🌙 Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'© CARTO', maxZoom:20}),
   };
-  baseLayers['🏙️ Google רחובות'].addTo(map);
+
+  // Default: OpenStreetMap (works on all networks/devices). Fallback to Dark if fails.
+  const defaultLayer = baseLayers['🗺️ OpenStreetMap'];
+  defaultLayer.addTo(map);
+  defaultLayer.once('tileerror', () => {
+    map.removeLayer(defaultLayer);
+    baseLayers['🌙 Dark'].addTo(map);
+  });
 
   L.control.layers(baseLayers, null, { position: 'topright', collapsed: true }).addTo(map);
   
@@ -1846,8 +1864,10 @@ function exportAssignments() {
 // ─── UI ───────────────────────────────────────────────────────────────────────
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('sidebarBackdrop');
   if (window.innerWidth <= 768) {
-    sb.classList.toggle('open');
+    const isOpen = sb.classList.toggle('open');
+    bd.style.display = isOpen ? 'block' : 'none';
   } else {
     sb.classList.toggle('collapsed');
   }
